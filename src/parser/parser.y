@@ -14,7 +14,7 @@ int bar_count = 0;
 %}
 
 %token TITLE COMPOSER INSTRUMENT
-%token STRESS STACCATO TREMOLO
+%token STRESS STACCATO TREMOLO FERMATA
 %token NOTE
 %token SHARP FLAT NATURAL
 %token OCTAVE_HIGHER OCTAVE_LOWER
@@ -215,6 +215,10 @@ PureNoteWithAccidentalAndOctaveAndArticulation
         $$ = $2;
         $$.note.articulation |= ART_TREMOLO;
     }
+    | FERMATA PureNoteWithAccidentalAndOctaveAndArticulation { 
+        $$ = $2;
+        $$.note.articulation |= ART_FERMATA;
+    }
     ;
 
 NoteWithDuration
@@ -273,6 +277,10 @@ PureChordWithArticulation
     | TREMOLO PureChordWithArticulation { 
         $$ = $2;
         $$.chord.articulation |= ART_TREMOLO;
+    }
+    | FERMATA PureChordWithArticulation { 
+        $$ = $2;
+        $$.chord.articulation |= ART_FERMATA;
     }
     ;
 

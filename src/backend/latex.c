@@ -60,6 +60,10 @@ int latex_parse_note(char *str, struct note_t *note,
 			strcat(note_str, " \\staccato{ ");
 			left_brackets += 1;
 		}
+		if (ART_FERMATA & note->articulation) {
+			strcat(note_str, " \\fermata{ ");
+			left_brackets += 1;
+		}
 		if (ART_TREMOLO & note->articulation) {
 			strcat(note_str, " \\tremolo{ ");
 			left_brackets += 1;
@@ -189,6 +193,10 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 					strcat(chord_str, " \\staccato{ ");
 					note_left_brackets += 1;
 				}
+				if (ART_FERMATA & chord->articulation) {
+					strcat(chord_str, " \\fermata{ ");
+					note_left_brackets += 1;
+				}
 				if (ART_TREMOLO & chord->articulation) {
 					strcat(chord_str, " \\tremolo{ ");
 					note_left_brackets += 1;
@@ -232,7 +240,6 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 	} else if (chord->duration == DUR_EIGHTH) {
 		strcat(chord_str, " \\underline{\\hspace{0.5em}}");
 	}
-	printf("%s\n", chord_str);
 
 	// Add to str
 	strcat(str, chord_str);
@@ -259,6 +266,9 @@ int latex_parse_inner_macro(char *str, struct macro_t *macro)
 	}
 	if (macro->type == MACRO_2_4) {
 		strcat(str, " \\frac{2}{4} \\hspace{1.5em}  ");
+	}
+	if (macro->type == MACRO_ARPEGGIO) {
+		strcat(str, " \\arpeggio ");
 	}
 	return 0;
 }
@@ -315,9 +325,12 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\usepackage{geometry}\n"
 		"\\usepackage{stackengine}\n"
 		"\\usepackage{tikz}\n"
+		"\\usepackage{array}\n"
 		"\\stackMath\n"
 		"\\geometry{a4paper, scale=0.8}\n"
 		"\\parskip 1ex\n"
+		"\\newcommand\\VRule[1][\\arrayrulewidth]{\\vrule width #1}\n"
+		"\\newcommand\\thickbar{\\VRule[1.5pt]}\n"
 		"\\newcommand\\udot[1]{\\mathrm{\\underaccent{\\dot}{#1}}}\n"
 		"\\newcommand\\stress[1]{\\accentset{>}{#1}}\n"
 		"\\newcommand\\staccato[1]{\\accentset{\\blacktriangledown}{#1}}\n"
@@ -328,6 +341,22 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"    \\draw (0.3em, 0.3em) -- (0.7em, 0.7em);\n"
 		"    \\draw (0.4em, 0.2em) -- (0.8em, 0.6em);\n"
 		"\\end{tikzpicture}}{#1}\n"
+		"}\n"
+		"\\newcommand\\fermata[1]{\\accentset{\n"
+		"\\begin{tikzpicture}\n"
+		"    \\filldraw (0.5em, 0em) arc (0:180:0.5em)\n"
+		"        arc (180:0:0.5em and 0.4em);\n"
+		"    \\filldraw (0em, 0em) circle (0.05em);\n"
+		"    \\fill [white] (-0.5em, -0.3em) rectangle (0.5em, -0.1em);\n"
+		"\\end{tikzpicture}}{#1}\n"
+		"}\n"
+		"\\newcommand\\arpeggio[1]{\n"
+		"\\begin{tikzpicture}\n"
+		"\\draw (0em, 0em) arc (45:-45:0.3em)\n"
+		"    arc (135:225:0.3em) arc (45:-45:0.3em)\n"
+		"    arc (135:225:0.3em) arc (45:-45:0.3em)\n"
+		"    arc (135:225:0.3em) arc (45:-45:0.3em);\n"
+		"\\end{tikzpicture}\n"
 		"}\n";
 
 	strcat(str, header);
@@ -491,11 +520,11 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 			struct bar_t *bar = &staff[b];
 			// Left barline
 			if (l_repeat_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{||l|}{$ : ");
+				strcat(str, " \\multicolumn{1}{!{\\thickbar}|!{:}l|}{$ ");
 			} else if (r_repeat_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{l||}{$ ");
+				strcat(str, " \\multicolumn{1}{l!{:}|!{\\thickbar}}{$ ");
 			} else if (end_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{l||}{$ ");
+				strcat(str, " \\multicolumn{1}{l|!{\\thickbar}}{$ ");
 			} else {
 				strcat(str, "\\multicolumn{1}{l|}{$ ");
 			}
@@ -566,10 +595,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 					strcat(str, " \\hspace{0.5em} ");
 					number_of_sixteenth_duration = 0;
 				}
-			}
-			// Right barline
-			if (r_repeat_barline[b - line_break_id[lineno]]) {
-				strcat(str, " : ");
 			}
 			if (b != line_break_id[lineno + 1] - 1) {
 				strcat(str, " $}& ");

@@ -52,6 +52,7 @@ enum macro_type_t {
 	MACRO_4_4 = 201, // 4/4
 	MACRO_3_4 = 202, // 3/4
 	MACRO_2_4 = 203, // 2/4
+	MACRO_ARPEGGIO = 204, // arpeggio
 	// Invisible macros (301~399)
 	MACRO_NEW_LINE = 301,
 	// Key macros (401~499)
@@ -97,7 +98,8 @@ enum articulation_t {
 	ART_NONE,
 	ART_STRESS = 1,
 	ART_STACCATO = 2,
-	ART_TREMOLO = 4
+	ART_TREMOLO = 4,
+	ART_FERMATA = 8
 };
 
 enum accidental_t { ACC_NONE, ACC_SHARP, ACC_FLAT, ACC_NATURAL };

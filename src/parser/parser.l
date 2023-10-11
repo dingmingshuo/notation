@@ -19,6 +19,7 @@ Instrument			instrument\:[a-zA-Z0-9\ ]*
 Stress              \>
 Staccato            v
 Tremolo				t
+Fermata				f
 Note                [0-7]
 Sharp               \#
 Flat                b
@@ -58,6 +59,7 @@ UnkonwnInput        .
 {Stress}            { return STRESS; }
 {Staccato}          { return STACCATO; }
 {Tremolo}         	{ return TREMOLO; }
+{Fermata}         	{ return FERMATA; }
 {Note}              { yylval.lval.note = atoi(yytext); return NOTE; }
 {Sharp}             { return SHARP; }
 {Flat}              { return FLAT; }

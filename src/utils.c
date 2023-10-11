@@ -175,6 +175,8 @@ int str_to_macro(struct macro_t *macro, char *str)
 		macro->type = MACRO_3_4;
 	} else if (strcmp(str, "2/4") == 0) {
 		macro->type = MACRO_2_4;
+	} else if (strcmp(str, "arpeggio") == 0) {
+		macro->type = MACRO_ARPEGGIO;
 	} else if (strcmp(str, "newline") == 0) {
 		macro->type = MACRO_NEW_LINE;
 	} else if (strcmp(str, "1=C") == 0) {

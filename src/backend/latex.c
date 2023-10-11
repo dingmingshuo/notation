@@ -11,6 +11,9 @@
 #define MAX_NOTE_STRING_LEN 512
 #define MAX_MACRO_STRING_LEN 32
 
+// Lengths are represented in mu to em
+#define LENGTH_ACCIDENTAL (7.0 / 14.0)
+
 int latex_parse_note(char *str, struct note_t *note,
 		     enum duration_t previous_note_duration)
 {
@@ -28,6 +31,26 @@ int latex_parse_note(char *str, struct note_t *note,
 	if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
 		char note_str[MAX_NOTE_STRING_LEN];
 		note_str[0] = '\0';
+		
+		// Proceed accidental
+		if (note->duration == DUR_EIGHTH) {
+			strcat(note_str, " \\underline{ ");
+		} else if (note->duration == DUR_SIXTEENTH) {
+			strcat(note_str, " \\underline{\\underline{ ");
+		}
+		if (note->accidental == ACC_SHARP) {
+			strcat(note_str, " ^\\sharp ");
+		} else if (note->accidental == ACC_FLAT) {
+			strcat(note_str, " ^\\flat ");
+		} else if (note->accidental == ACC_NATURAL) {
+			strcat(note_str, " ^\\natural ");
+		}
+		if (note->duration == DUR_EIGHTH) {
+			strcat(note_str, " } ");
+		} else if (note->duration == DUR_SIXTEENTH) {
+			strcat(note_str, " }} ");
+		}
+
 		// Proceed articulation
 		if (ART_STRESS & note->articulation) {
 			strcat(note_str, " \\stress{ ");
@@ -59,14 +82,6 @@ int latex_parse_note(char *str, struct note_t *note,
 			strcat(note_str, " \\underline{\\underline{ ");
 			left_brackets += 2;
 		}
-		// Proceed accidental
-		if (note->accidental == ACC_SHARP) {
-			strcat(note_str, " ^\\sharp ");
-		} else if (note->accidental == ACC_FLAT) {
-			strcat(note_str, " ^\\flat ");
-		} else if (note->accidental == ACC_NATURAL) {
-			strcat(note_str, " ^\\natural ");
-		}
 		// Proceed note
 		char note_char[2];
 		note_char[0] = '0' + note->note;
@@ -92,46 +107,78 @@ int latex_parse_note(char *str, struct note_t *note,
 
 int latex_parse_chord(char *str, struct chord_t *chord)
 {
-	int chord_left_brackets = 0;
 	char chord_str[MAX_NOTE_STRING_LEN * MAX_NOTE_PER_CHORD];
 	chord_str[0] = '\0';
-	// From the bottom to the top
+	// Proceed accidental from the bottom to the top
+	int has_accidental = 0;
 	for (int i = chord->note_count - 1; i >= 0; i--) {
 		struct note_t *note = &chord->notes[i];
-		if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
-			int note_left_brackets = 0;
-			// Left brackets numbers for the stackon
-			if (i == chord->note_count - 1 || i == 0) {
-				note_left_brackets = 1;
-			} else {
-				note_left_brackets = 2;
+		if (note->accidental != ACC_NONE) {
+			has_accidental = 1;
+			break;
+		}
+	}
+	if (has_accidental) {
+		// Process duration
+		if (chord->duration == DUR_EIGHTH) {
+			strcat(chord_str, " \\underline{ ");
+		} else if (chord->duration == DUR_SIXTEENTH) {
+			strcat(chord_str,
+					" \\underline{\\underline{ ");
+		}
+		// Process Longstack
+		strcat(chord_str, " \\Longstack{");	
+		for (int i = 0; i < chord->note_count; i++) {
+			// Process accidentals
+			struct note_t *note = &chord->notes[i];
+			if (note->accidental == ACC_SHARP) {
+				strcat(chord_str, "{^\\sharp}");
+			} else if (note->accidental == ACC_FLAT) {
+				strcat(chord_str, "{^\\flat}");
+			} else if (note->accidental == ACC_NATURAL) {
+				strcat(chord_str, "{^\\natural}");
+			} else if (note->accidental == ACC_NONE) {
+				strcat(chord_str, "{\\vphantom{^\\sharp}}");
 			}
-			// Proceed octave lower, duration and stackon for the bottom
-			if (i == chord->note_count - 1) {
-				// Proceed octave lower
-				for (int i = 0; i > note->octave; i--) {
-					strcat(chord_str, " \\udot{ ");
-					chord_left_brackets += 1;
-				}
-				// Proceed duration
-				if (chord->duration == DUR_EIGHTH) {
-					strcat(chord_str, " \\underline{ ");
-					chord_left_brackets += 1;
-				} else if (chord->duration == DUR_SIXTEENTH) {
-					strcat(chord_str,
-					       " \\underline{\\underline{ ");
-					chord_left_brackets += 2;
-				}
-				// Proceed stackon
-				for (int j = 0; j < chord->note_count - 1;
-				     j++) {
-					strcat(chord_str, " \\stackon{ ");
-				}
-			}
-			// Proceed the stackon left bracket
 			if (i != chord->note_count - 1) {
-				strcat(chord_str, " { ");
+				strcat(chord_str, " ");
 			}
+		}
+		// Process right bracket of Longstack
+		strcat(chord_str, "} ");
+		// Process duration right brackets.
+		if (chord->duration == DUR_EIGHTH) {
+			strcat(chord_str, "} ");
+		} else if (chord->duration == DUR_SIXTEENTH) {
+			strcat(chord_str, "}} ");
+		}
+	}
+
+	// Proceed notes from the top to the bottom
+	// Proceed octave lower, duration and stackon for the bottom
+	int chord_left_brackets = 0;
+	struct note_t *note = &chord->notes[chord->note_count - 1];
+	for (int i = 0; i > note->octave; i--) {
+		strcat(chord_str, " \\udot{ ");
+		chord_left_brackets += 1;
+	}
+	// Proceed duration
+	if (chord->duration == DUR_EIGHTH) {
+		strcat(chord_str, " \\underline{ ");
+		chord_left_brackets += 1;
+	} else if (chord->duration == DUR_SIXTEENTH) {
+		strcat(chord_str,
+				" \\underline{\\underline{ ");
+		chord_left_brackets += 2;
+	}
+	// Process Longstack
+	strcat(chord_str, " \\Longstack{");	
+	chord_left_brackets += 1;
+	for (int i = 0; i < chord->note_count; i++) {
+		struct note_t *note = &chord->notes[i];
+		if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
+			int note_left_brackets = 1;
+			strcat(chord_str, "{");
 			// Proceed articulation for the top
 			if (i == 0) {
 				if (ART_STRESS & chord->articulation) {
@@ -148,24 +195,16 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 				}
 			}
 			// Proceed octave higher
-			for (int i = 0; i < note->octave; i++) {
+			for (int j = 0; j < note->octave; j++) {
 				strcat(chord_str, " \\dot{ ");
 				note_left_brackets += 1;
 			}
 			// Proceed octave lower for the notes not on the bottom
 			if (i != chord->note_count - 1) {
-				for (int i = 0; i > note->octave; i--) {
+				for (int j = 0; j > note->octave; j--) {
 					strcat(chord_str, " \\udot{ ");
 					note_left_brackets += 1;
 				}
-			}
-			// Proceed accidental
-			if (note->accidental == ACC_SHARP) {
-				strcat(chord_str, " ^\\sharp ");
-			} else if (note->accidental == ACC_FLAT) {
-				strcat(chord_str, " ^\\flat ");
-			} else if (note->accidental == ACC_NATURAL) {
-				strcat(chord_str, " ^\\natural ");
 			}
 			// Proceed note
 			char note_char[2];
@@ -173,8 +212,11 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 			note_char[1] = '\0';
 			strcat(chord_str, note_char);
 			// Add brackets
-			for (int i = 0; i < note_left_brackets; i++) {
-				strcat(chord_str, " } ");
+			for (int j = 0; j < note_left_brackets; j++) {
+				strcat(chord_str, "}");
+			}
+			if (i != chord->note_count - 1) {
+				strcat(chord_str, " ");
 			}
 		} else {
 			return 1;
@@ -182,7 +224,7 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 	}
 
 	for (int i = 0; i < chord_left_brackets; i++) {
-		strcat(chord_str, " } ");
+		strcat(chord_str, "}");
 	}
 	// Proceed padding
 	if (chord->duration == DUR_QUARTER) {
@@ -190,6 +232,7 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 	} else if (chord->duration == DUR_EIGHTH) {
 		strcat(chord_str, " \\underline{\\hspace{0.5em}}");
 	}
+	printf("%s\n", chord_str);
 
 	// Add to str
 	strcat(str, chord_str);
@@ -275,7 +318,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\stackMath\n"
 		"\\geometry{a4paper, scale=0.8}\n"
 		"\\parskip 1ex\n"
-		"\\newcommand\\udot[1]{\\underaccent{\\dot}{#1}}\n"
+		"\\newcommand\\udot[1]{\\mathrm{\\underaccent{\\dot}{#1}}}\n"
 		"\\newcommand\\stress[1]{\\accentset{>}{#1}}\n"
 		"\\newcommand\\staccato[1]{\\accentset{\\blacktriangledown}{#1}}\n"
 		"\\newcommand\\macro[1]{\\scriptsize{\\textbf{\\textit{#1}}}}\n"

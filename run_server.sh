@@ -1,0 +1,1 @@
+python3 frontend/run_server.py

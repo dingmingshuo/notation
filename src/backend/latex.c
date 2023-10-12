@@ -779,7 +779,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 }
 
 int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
-		 char *filename)
+		 char *filename, char* output_dir)
 {
 	char str[MAX_STR_LEN];
 	str[0] = '\0';
@@ -793,7 +793,9 @@ int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
 	// Compile to pdf
 	char command[MAX_STR_LEN];
 	command[0] = '\0';
-	strcat(command, "pdflatex ");
+	strcat(command, "pdflatex -output-directory=");
+	strcat(command, output_dir);
+	strcat(command, " ");
 	strcat(command, filename);
 	system(command);
 

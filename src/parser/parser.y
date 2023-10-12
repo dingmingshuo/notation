@@ -304,6 +304,6 @@ int main(int argc, char *argv[]) {
     freopen(argv[1], "r", stdin);
     yyparse();
     parse_staff_by_settings(staff, bar_count);
-    latex_render(&meta, staff, bar_count, argv[2]);
+    latex_render(&meta, staff, bar_count, argv[2], argv[3]);
     return 0;
 }

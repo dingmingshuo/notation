@@ -168,7 +168,7 @@ struct bar_t {
 };
 
 int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
-		 char *filename);
+		 char *filename, char *output_dir);
 int macro_to_str(char *str, struct macro_t *macro);
 int str_to_macro(struct macro_t *macro, char *str);
 int parse_staff_by_settings(struct bar_t *staff, int bar_count);

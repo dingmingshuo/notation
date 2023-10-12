@@ -1,3 +1,5 @@
 build/
 .vscode/
 .DS_Store
+frontend/static/tmp/nmn/*
+frontend/static/tmp/pdf/*

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简谱制谱</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #navbar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            height: 5%;
+            background-color: #f0f0f0;
+        }
+
+        .navbar-item {
+            text-align: center;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        #container {
+            display: flex;
+            width: 100%;
+            height: 95%;
+        }
+
+        #left {
+            flex: 1;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        #right {
+            flex: 2;
+            background-color: #fff;
+        }
+
+        #pdf-viewer {
+            width: 100%;
+            height: 99%;
+        }
+
+        #text-input {
+            width: 100%;
+            height: 100%;
+        }
+
+        textarea {
+            resize: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar">
+        <div class="navbar-item">
+            <h2>简谱制谱</h2>
+        </div>
+        <a class="navbar-item" id="display-mannual" href="#">
+            显示参考手册
+        </a>
+        <div class="navbar-item">
+            按Ctrl-S保存并渲染
+        </div>
+    </div>
+
+    <div id="container">
+        <div id="left">
+            <textarea type="text" id="text-input" name="text" required></textarea>
+        </div>
+        <div id="right">
+            <iframe id="pdf-viewer" src=""></iframe>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.2/markdown-it.min.js"></script>
+    <script>
+        function DisplayManual() {
+            fetch('/manual.md')
+                .then(response => response.text())
+                .then(data => {
+                    const md = new markdownit();
+                    const html = md.render(data);
+                    pdfViewer.removeAttribute("src");
+                    pdfViewer.srcdoc = html;
+                });
+        }
+
+        // Load from localStorage
+        window.onload = function () {
+            DisplayManual();
+            const textInput = document.getElementById("text-input");
+            const text = localStorage.getItem("txt");
+            if (text) {
+                textInput.value = text;
+            } else {
+                textInput.value = `title: Dance of the Yao Tribe
+composer: Peng Xiuwen
+instrument: Zhongruan
+
+{typekey:C} {displaykey:C} {display_flat}
+[2/4] [p] [Andante] [1=C]  2, 6,,/6,,/ |
+2, 6,/6,/ |
+2, 6,,/6,,/ |
+2, 6,/6,/ |
+4,/. 3,// 4,/. 5,// | 
+6,/. 5,// 6,/. 5,// | [newline]
+5,/. 4,// 4,/. 3,// |
+2, 0 |
+0 [p] 2,/ 2,/|
+0 2,/ 2,/|
+0 6,/ 6,/|
+0 2,/ 2,/| [newline]
+0 1,/ 1,/|
+0 1,/ 1,/|
+0/2,/ 0/1,/|
+0 2,/ 2,/|
+[mp] t(46,) - |
+t(25,) - [end]|`;
+            }
+        };
+
+        // Get mannual.md from server on click
+        const displayMannual = document.getElementById("display-mannual");
+        const pdfViewer = document.getElementById("pdf-viewer");
+        displayMannual.onclick = () => DisplayManual();
+
+        // Render pdf on Ctrl-S
+        document.addEventListener("keydown", function (event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+                event.preventDefault(); // Prevent the default "Save" action
+
+                pdfViewer.srcdoc = "渲染中，请稍候……";
+
+                const textInput = document.getElementById("text-input");
+                const text = textInput.value;
+                localStorage.setItem("txt", text);
+
+
+                fetch('/api/receive', {
+                    method: 'POST',
+                    body: JSON.stringify({ text }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        pdfViewer.removeAttribute("srcdoc");
+                        pdfViewer.src = data.pdf_path;
+                    })
+                    .catch(error => {
+                        pdfViewer.removeAttribute("src");
+                        pdfViewer.srcdoc = `An error occurred: ${error.message}`;
+                    });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

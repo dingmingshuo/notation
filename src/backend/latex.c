@@ -9,7 +9,7 @@
 #define MAX_LENGTH_PER_LINE 100
 #define MAX_BAR_PER_LINE 12
 #define MAX_NOTE_STRING_LEN 512
-#define MAX_MACRO_STRING_LEN 32
+#define MAX_MACRO_STRING_LEN 64
 
 // Lengths are represented in mu to em
 #define LENGTH_ACCIDENTAL (7.0 / 14.0)
@@ -31,7 +31,7 @@ int latex_parse_note(char *str, struct note_t *note,
 	if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
 		char note_str[MAX_NOTE_STRING_LEN];
 		note_str[0] = '\0';
-		
+
 		// Proceed accidental
 		if (note->duration == DUR_EIGHTH) {
 			strcat(note_str, " \\underline{ ");
@@ -127,11 +127,10 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 		if (chord->duration == DUR_EIGHTH) {
 			strcat(chord_str, " \\underline{ ");
 		} else if (chord->duration == DUR_SIXTEENTH) {
-			strcat(chord_str,
-					" \\underline{\\underline{ ");
+			strcat(chord_str, " \\underline{\\underline{ ");
 		}
 		// Process Longstack
-		strcat(chord_str, " \\Longstack{");	
+		strcat(chord_str, " \\Longstack{");
 		for (int i = 0; i < chord->note_count; i++) {
 			// Process accidentals
 			struct note_t *note = &chord->notes[i];
@@ -171,12 +170,11 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 		strcat(chord_str, " \\underline{ ");
 		chord_left_brackets += 1;
 	} else if (chord->duration == DUR_SIXTEENTH) {
-		strcat(chord_str,
-				" \\underline{\\underline{ ");
+		strcat(chord_str, " \\underline{\\underline{ ");
 		chord_left_brackets += 2;
 	}
 	// Process Longstack
-	strcat(chord_str, " \\Longstack{");	
+	strcat(chord_str, " \\Longstack{");
 	chord_left_brackets += 1;
 	for (int i = 0; i < chord->note_count; i++) {
 		struct note_t *note = &chord->notes[i];
@@ -250,9 +248,9 @@ int latex_parse_macro(char *str, struct macro_t *macro)
 {
 	char macro_str[MAX_MACRO_STRING_LEN];
 	macro_to_str(macro_str, macro);
-	strcat(str, " \\macro{ ");
+	strcat(str, "\\macro{");
 	strcat(str, macro_str);
-	strcat(str, " } ");
+	strcat(str, " }");
 	return 0;
 }
 
@@ -416,6 +414,8 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 	line_count += 1;
 
 	// Render staff
+	int upper_long_term_macro = 0;
+	int lower_long_term_macro = 0;
 	for (int lineno = 0; lineno < line_count; lineno++) {
 		// Line start
 		char line_start[] = "\\begin{tabular}{";
@@ -456,6 +456,148 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 			}
 		}
 		strcat(str, " \\\\ \n");
+		// Upper longterm Macros
+		int has_upper_long_term_macros = 0;
+		if (upper_long_term_macro) {
+			has_upper_long_term_macros = 1;
+		}
+		for (int b = line_break_id[lineno];
+		     b < line_break_id[lineno + 1]; b++) {
+			struct bar_t *bar = &staff[b];
+			for (int i = 0; i < bar->element_count; i++) {
+				if (bar->elements[i].type == ELEMENT_MACRO &&
+				    IS_UPPER_LONG_TERM_MACRO(
+					    bar->elements[i].data.macro.type)) {
+					has_upper_long_term_macros = 1;
+				}
+			}
+		}
+		if (has_upper_long_term_macros) {
+			// cline of volta brackets
+			int has_cline = upper_long_term_macro;
+			for (int b = line_break_id[lineno];
+			     b < line_break_id[lineno + 1]; b++) {
+				struct bar_t *bar = &staff[b];
+				for (int i = 0; i < bar->element_count; i++) {
+					if (bar->elements[i].type ==
+						    ELEMENT_MACRO &&
+					    IS_UPPER_LONG_TERM_MACRO(
+						    bar->elements[i]
+							    .data.macro.type)) {
+						enum macro_type_t macro_type =
+							bar->elements[i]
+								.data.macro.type;
+						if (macro_type ==
+							    MACRO_VOLTA_1_BEGIN ||
+						    macro_type ==
+							    MACRO_VOLTA_2_BEGIN) {
+							has_cline = 1;
+						}
+						if (macro_type ==
+							    MACRO_VOLTA_1 ||
+						    macro_type ==
+							    MACRO_VOLTA_2 ||
+						    macro_type ==
+							    MACRO_VOLTA_1_END ||
+						    macro_type ==
+							    MACRO_VOLTA_2_END) {
+							char cline_str
+								[MAX_MACRO_STRING_LEN];
+							sprintf(cline_str,
+								"\\cline{%d-%d}",
+								b - line_break_id[lineno] +
+									1,
+								b - line_break_id[lineno] +
+									1);
+							strcat(str, cline_str);
+							has_cline = 0;
+						}
+					}
+				}
+				if (has_cline) {
+					char cline_str[MAX_MACRO_STRING_LEN];
+					sprintf(cline_str, "\\cline{%d-%d}",
+						b - line_break_id[lineno] + 1,
+						b - line_break_id[lineno] + 1);
+					strcat(str, cline_str);
+				}
+			}
+			// Process upper long term macros
+			for (int b = line_break_id[lineno];
+			     b < line_break_id[lineno + 1]; b++) {
+				struct bar_t *bar = &staff[b];
+				char macro_str[MAX_MACRO_STRING_LEN];
+				macro_str[0] = '\0';
+				int has_volta_begin = 0; // To process begin and end in the same bar
+				for (int i = 0; i < bar->element_count; i++) {
+					if (bar->elements[i].type ==
+						    ELEMENT_MACRO &&
+					    IS_UPPER_LONG_TERM_MACRO(
+						    bar->elements[i]
+							    .data.macro.type)) {
+						enum macro_type_t macro_type =
+							bar->elements[i]
+								.data.macro.type;
+						if (macro_type ==
+						    MACRO_VOLTA_1) {
+							strcpy(macro_str,
+							       "\\multicolumn{1}{@{\\hspace{0.1em}}|l}{1.}");
+							upper_long_term_macro =
+								0;
+						} else if (macro_type ==
+							   MACRO_VOLTA_2) {
+							strcpy(macro_str,
+							       "\\multicolumn{1}{@{\\hspace{0.1em}}|l}{2.}");
+							upper_long_term_macro =
+								0;
+						} else if (macro_type ==
+							   MACRO_VOLTA_1_BEGIN) {
+							strcpy(macro_str,
+							       "\\multicolumn{1}{@{\\hspace{0.1em}}|l}{1.}");
+							has_volta_begin =
+								macro_type;
+							upper_long_term_macro =
+								macro_type;
+						} else if (macro_type ==
+							   MACRO_VOLTA_2_BEGIN) {
+							strcpy(macro_str,
+							       "\\multicolumn{1}{@{\\hspace{0.1em}}|l}{2.}");
+							has_volta_begin =
+								macro_type;
+							upper_long_term_macro =
+								macro_type;
+						} else if (
+							macro_type ==
+								MACRO_VOLTA_1_END ||
+							macro_type ==
+								MACRO_VOLTA_2_END) {
+							printf("%d\n",
+							       has_volta_begin);
+							if (has_volta_begin ==
+							    MACRO_VOLTA_1_BEGIN) {
+								strcpy(macro_str,
+								       "\\multicolumn{1}{@{\\hspace{0.1em}}|l|@{\\hspace{0.1em}}}{1.}");
+							} else if (
+								has_volta_begin ==
+								MACRO_VOLTA_2_BEGIN) {
+								strcpy(macro_str,
+								       "\\multicolumn{1}{@{\\hspace{0.1em}}|l|@{\\hspace{0.1em}}}{2.}");
+							} else {
+								strcpy(macro_str,
+								       "\\multicolumn{1}{l|@{\\hspace{0.1em}}}{}");
+							}
+							upper_long_term_macro =
+								0;
+						}
+					}
+				}
+				strcat(str, macro_str);
+				if (b != line_break_id[lineno + 1] - 1) {
+					strcat(str, " & ");
+				}
+			}
+			strcat(str, "\\\\ \n");
+		}
 		// Upper Macros
 		for (int b = line_break_id[lineno];
 		     b < line_break_id[lineno + 1]; b++) {
@@ -520,11 +662,14 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 			struct bar_t *bar = &staff[b];
 			// Left barline
 			if (l_repeat_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{!{\\thickbar}|!{:}l|}{$ ");
+				strcat(str,
+				       " \\multicolumn{1}{!{\\thickbar}|!{:}l|}{$ ");
 			} else if (r_repeat_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{l!{:}|!{\\thickbar}}{$ ");
+				strcat(str,
+				       " \\multicolumn{1}{l!{:}|!{\\thickbar}}{$ ");
 			} else if (end_barline[b - line_break_id[lineno]]) {
-				strcat(str, " \\multicolumn{1}{l|!{\\thickbar}}{$ ");
+				strcat(str,
+				       " \\multicolumn{1}{l|!{\\thickbar}}{$ ");
 			} else {
 				strcat(str, "\\multicolumn{1}{l|}{$ ");
 			}

@@ -74,7 +74,19 @@ enum macro_type_t {
 	// Barline macros (501~599)
 	MACRO_L_REPEAT = 501, // left repeat sign
 	MACRO_R_REPEAT = 502, // right repeat sign
-	MACRO_END = 503 // end sign
+	MACRO_END = 503, // end sign
+	// Upper longterm macros (601~699)
+	MACRO_VOLTA_1 = 601, // volta 1
+	MACRO_VOLTA_1_BEGIN = 602, // volta 1 begin
+	MACRO_VOLTA_1_END = 603, // volta 1 end
+	MACRO_VOLTA_2 = 604, // volta 2
+	MACRO_VOLTA_2_BEGIN = 605, // volta 2 begin
+	MACRO_VOLTA_2_END = 606, // volta 2 end
+	// Lower longterm macros (701~799)
+	MACRO_CRESC_BEGIN = 701, // crescendo begin
+	MACRO_CRESC_END = 702, // crescendo end
+	MACRO_DIM_BEGIN = 703, // diminuendo begin
+	MACRO_DIM_END = 704 // diminuendo end
 };
 
 #define IS_LOWER_MACRO(macro) ((macro) < 100)
@@ -83,6 +95,8 @@ enum macro_type_t {
 #define IS_INVISIBLE_MACRO(macro) (300 < (macro) && (macro) < 400)
 #define IS_KEY_MACRO(macro) (400 < (macro) && (macro) < 500)
 #define IS_BARLINE_MACRO(macro) (500 < (macro) && (macro) < 600)
+#define IS_UPPER_LONG_TERM_MACRO(macro) (600 < (macro) && (macro) < 700)
+#define IS_LOWER_LONG_TERM_MACRO(macro) (700 < (macro) && (macro) < 800)
 
 enum setting_type_t {
 	SETTING_TYPE_KEY,

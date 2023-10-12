@@ -215,6 +215,26 @@ int str_to_macro(struct macro_t *macro, char *str)
 		macro->type = MACRO_R_REPEAT;
 	} else if (strcmp(str, "end") == 0) {
 		macro->type = MACRO_END;
+	} else if (strcmp(str, "volta1") == 0) {
+		macro->type = MACRO_VOLTA_1;
+	} else if (strcmp(str, "volta1begin") == 0) {
+		macro->type = MACRO_VOLTA_1_BEGIN;
+	} else if (strcmp(str, "volta1end") == 0) {
+		macro->type = MACRO_VOLTA_1_END;
+	} else if (strcmp(str, "volta2") == 0) {
+		macro->type = MACRO_VOLTA_2;
+	} else if (strcmp(str, "volta2begin") == 0) {
+		macro->type = MACRO_VOLTA_2_BEGIN;
+	} else if (strcmp(str, "volta2end") == 0) {
+		macro->type = MACRO_VOLTA_2_END;
+	} else if (strcmp(str, "crescbegin") == 0) {
+		macro->type = MACRO_CRESC_BEGIN;
+	} else if (strcmp(str, "crescend") == 0) {
+		macro->type = MACRO_CRESC_END;
+	} else if (strcmp(str, "dimbegin") == 0) {
+		macro->type = MACRO_DIM_BEGIN;
+	} else if (strcmp(str, "dimend") == 0) {
+		macro->type = MACRO_DIM_END;
 	} else {
 		return 1;
 	}

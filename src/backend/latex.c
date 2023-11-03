@@ -15,25 +15,31 @@
 #define LENGTH_ACCIDENTAL (7.0 / 14.0)
 
 int latex_parse_note(char *str, struct note_t *note,
-		     enum duration_t previous_note_duration)
+		     enum duration_t previous_note_duration,
+		     int is_appoggiatura)
 {
 	int left_brackets = 0;
-	if (note->type == NOTE_DOT) {
-		if (previous_note_duration == DUR_EIGHTH) {
-			strcat(str, " \\underline{\\cdot} ");
-		} else if (previous_note_duration == DUR_QUARTER) {
-			strcat(str, " \\cdot \\hspace{0.2em}");
+	if (is_appoggiatura == -1) {
+		if (note->type == NOTE_DOT) {
+			if (previous_note_duration == DUR_EIGHTH) {
+				strcat(str, " \\underline{\\cdot} ");
+			} else if (previous_note_duration == DUR_QUARTER) {
+				strcat(str, " \\cdot \\hspace{0.2em}");
+			}
 		}
-	}
-	if (note->type == NOTE_TIE) {
-		strcat(str, " - \\hspace{0.5em} ");
+		if (note->type == NOTE_TIE) {
+			strcat(str, " - \\hspace{0.5em} ");
+		}
 	}
 	if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
 		char note_str[MAX_NOTE_STRING_LEN];
 		note_str[0] = '\0';
 		// Proceed padding
-		if (note->duration == DUR_EIGHTH) {
-			strcat(note_str, " \\underline{\\hspace{0.1em}}");
+		if (is_appoggiatura == -1) {
+			if (note->duration == DUR_EIGHTH) {
+				strcat(note_str,
+				       " \\underline{\\hspace{0.1em}}");
+			}
 		}
 		// Proceed accidental
 		if (note->duration == DUR_EIGHTH) {
@@ -100,10 +106,13 @@ int latex_parse_note(char *str, struct note_t *note,
 		}
 
 		// Proceed padding
-		if (note->duration == DUR_QUARTER) {
-			strcat(note_str, " \\hspace{0.5em}");
-		} else if (note->duration == DUR_EIGHTH) {
-			strcat(note_str, " \\underline{\\hspace{0.1em}}");
+		if (is_appoggiatura == -1) {
+			if (note->duration == DUR_QUARTER) {
+				strcat(note_str, " \\hspace{0.5em}");
+			} else if (note->duration == DUR_EIGHTH) {
+				strcat(note_str,
+				       " \\underline{\\hspace{0.1em}}");
+			}
 		}
 
 		// Add to str
@@ -112,14 +121,16 @@ int latex_parse_note(char *str, struct note_t *note,
 	return 0;
 }
 
-int latex_parse_chord(char *str, struct chord_t *chord)
+int latex_parse_chord(char *str, struct chord_t *chord, int is_appoggiatura)
 {
 	char chord_str[MAX_NOTE_STRING_LEN * MAX_NOTE_PER_CHORD];
 	chord_str[0] = '\0';
 
 	// Proceed padding
-	if (chord->duration == DUR_EIGHTH) {
-		strcat(chord_str, " \\underline{\\hspace{0.1em}}");
+	if (is_appoggiatura == -1) {
+		if (chord->duration == DUR_EIGHTH) {
+			strcat(chord_str, " \\underline{\\hspace{0.1em}}");
+		}
 	}
 	// Proceed accidental from the bottom to the top
 	int has_accidental = 0;
@@ -241,10 +252,12 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 		strcat(chord_str, "}");
 	}
 	// Proceed padding
-	if (chord->duration == DUR_QUARTER) {
-		strcat(chord_str, " \\hspace{0.5em}");
-	} else if (chord->duration == DUR_EIGHTH) {
-		strcat(chord_str, " \\underline{\\hspace{0.1em}}");
+	if (is_appoggiatura == -1) {
+		if (chord->duration == DUR_QUARTER) {
+			strcat(chord_str, " \\hspace{0.5em}");
+		} else if (chord->duration == DUR_EIGHTH) {
+			strcat(chord_str, " \\underline{\\hspace{0.1em}}");
+		}
 	}
 
 	// Add to str
@@ -291,6 +304,23 @@ int latex_parse_inner_macro(char *str, struct macro_t *macro)
 	}
 	if (macro->type == MACRO_ARPEGGIO) {
 		strcat(str, " \\arpeggio ");
+	}
+	if (macro->type == MACRO_APPOGGIATURA_BEGIN) {
+		strcat(str, " \\appoggiatura{");
+	}
+	if (macro->type == MACRO_APPOGGIATURA_END) {
+		strcat(str, "}");
+	}
+	if (macro->type == MACRO_APPOGGIATURA_CHORD_BEGIN) {
+		strcat(str, "\\Longstack{");
+		strcat(str, "{\\appoggiatura{");
+	}
+	if (macro->type == MACRO_APPOGGIATURA_CHORD_MIDDLE) {
+		strcat(str, "}} ");
+		strcat(str, "{\\appoggiatura{");
+	}
+	if (macro->type == MACRO_APPOGGIATURA_CHORD_END) {
+		strcat(str, "}}}");
 	}
 	return 0;
 }
@@ -447,6 +477,13 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\draw  [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=1 ] (194.68,112.93) .. controls (194.47,112.15) and (195.4,111.22) .. (196.77,110.85) .. controls (198.13,110.48) and (199.41,110.81) .. (199.62,111.59) .. controls (199.83,112.37) and (198.9,113.3) .. (197.53,113.67) .. controls (196.17,114.04) and (194.89,113.71) .. (194.68,112.93) -- cycle ;\n"
 		"\\draw (201.62,102) node [anchor=north west][inner sep=0.75pt]   [align=left] {$=#1$};\n"
 		"\\end{tikzpicture}\n"
+		"}\n"
+		"\\newcommand\\appoggiatura[1]{\n"
+		"\\hspace{0.5em}\\scriptsize\n"
+		"\\begin{tikzpicture}[overlay,x=0.75pt,y=0.75pt,yscale=-1,xscale=1]\n"
+		"\\draw (-4,-10) arc (180:90:3pt and 3pt);\n"
+		"\\draw (-4,-7) node [anchor=south] {$\\underline{\\underline{#1}}$};\n"
+		"\\end{tikzpicture}\\normalsize\n"
 		"}\n";
 
 	strcat(str, header);
@@ -473,22 +510,38 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 	for (int b = 0; b < bar_count; b++) {
 		struct bar_t *bar = &staff[b];
 		int new_line_macro = 0;
+		int is_appoggiatura = -1;
 		for (int i = 0; i < bar->element_count; i++) {
 			if (bar->elements[i].type == ELEMENT_NOTE) {
-				if (bar->elements[i].data.note.duration ==
-				    DUR_SIXTEENTH) {
-					length_of_this_line += 1;
-				} else if (bar->elements[i].data.note.duration ==
-					   DUR_EIGHTH) {
-					length_of_this_line += 2;
-				} else if (bar->elements[i].data.note.duration ==
-					   DUR_QUARTER) {
-					length_of_this_line += 3.5;
+				if (is_appoggiatura == -1) {
+					if (bar->elements[i].data.note.duration ==
+					    DUR_SIXTEENTH) {
+						length_of_this_line += 1;
+					} else if (bar->elements[i]
+							   .data.note.duration ==
+						   DUR_EIGHTH) {
+						length_of_this_line += 2;
+					} else if (bar->elements[i]
+							   .data.note.duration ==
+						   DUR_QUARTER) {
+						length_of_this_line += 3.5;
+					}
 				}
 			} else if (bar->elements[i].type == ELEMENT_MACRO &&
 				   IS_INNER_MACRO(
 					   bar->elements[i].data.macro.type)) {
-				length_of_this_line += 4;
+				if (bar->elements[i].data.macro.type ==
+					    MACRO_APPOGGIATURA_BEGIN ||
+				    bar->elements[i].data.macro.type ==
+					    MACRO_APPOGGIATURA_CHORD_BEGIN)
+					is_appoggiatura = 0;
+				if (is_appoggiatura == -1)
+					length_of_this_line += 4;
+				if (bar->elements[i].data.macro.type ==
+					    MACRO_APPOGGIATURA_END ||
+				    bar->elements[i].data.macro.type ==
+					    MACRO_APPOGGIATURA_CHORD_END)
+					is_appoggiatura = -1;
 			} else if (bar->elements[i].type == ELEMENT_MACRO &&
 				   bar->elements[i].data.macro.type ==
 					   MACRO_NEW_LINE) {
@@ -770,67 +823,82 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 			int number_of_sixteenth_duration =
 				0; // To control space between sixteenth notes
 			int previous_note_duration = -1;
+			int is_appoggiatura = -1;
 			for (int i = 0; i < bar->element_count; i++) {
 				if (bar->elements[i].type == ELEMENT_NOTE) {
 					latex_parse_note(
 						str,
 						&bar->elements[i].data.note,
-						previous_note_duration);
-					if (bar->elements[i].data.note.type ==
-					    NOTE_DOT) {
-						if (previous_note_duration ==
-						    DUR_QUARTER)
-							number_of_sixteenth_duration +=
-								2;
-						else if (previous_note_duration ==
-							 DUR_EIGHTH)
+						previous_note_duration,
+						is_appoggiatura);
+					if (is_appoggiatura == -1) {
+						if (bar->elements[i]
+							    .data.note.type ==
+						    NOTE_DOT) {
+							if (previous_note_duration ==
+							    DUR_QUARTER)
+								number_of_sixteenth_duration +=
+									2;
+							else if (previous_note_duration ==
+								 DUR_EIGHTH)
+								number_of_sixteenth_duration +=
+									1;
+						}
+						if (bar->elements[i]
+							    .data.note
+							    .duration ==
+						    DUR_SIXTEENTH) {
 							number_of_sixteenth_duration +=
 								1;
+						} else if (bar->elements[i]
+								   .data.note
+								   .duration ==
+							   DUR_EIGHTH) {
+							number_of_sixteenth_duration +=
+								2;
+						} else if (bar->elements[i]
+								   .data.note
+								   .duration ==
+							   DUR_QUARTER) {
+							number_of_sixteenth_duration +=
+								4;
+						}
+						previous_note_duration =
+							bar->elements[i]
+								.data.note
+								.duration;
 					}
-					if (bar->elements[i].data.note.duration ==
-					    DUR_SIXTEENTH) {
-						number_of_sixteenth_duration +=
-							1;
-					} else if (bar->elements[i]
-							   .data.note.duration ==
-						   DUR_EIGHTH) {
-						number_of_sixteenth_duration +=
-							2;
-					} else if (bar->elements[i]
-							   .data.note.duration ==
-						   DUR_QUARTER) {
-						number_of_sixteenth_duration +=
-							4;
-					}
-					previous_note_duration =
-						bar->elements[i]
-							.data.note.duration;
 				} else if (bar->elements[i].type ==
 					   ELEMENT_CHORD) {
 					latex_parse_chord(
 						str,
-						&bar->elements[i].data.chord);
-					if (bar->elements[i]
-						    .data.chord.duration ==
-					    DUR_SIXTEENTH) {
-						number_of_sixteenth_duration +=
-							1;
-					} else if (bar->elements[i]
-							   .data.chord
-							   .duration ==
-						   DUR_EIGHTH) {
-						number_of_sixteenth_duration +=
-							2;
-					} else if (bar->elements[i]
-							   .data.chord
-							   .duration ==
-						   DUR_QUARTER) {
-						number_of_sixteenth_duration +=
-							4;
+						&bar->elements[i].data.chord,
+						is_appoggiatura);
+					if (is_appoggiatura == -1) {
+						if (bar->elements[i]
+							    .data.chord
+							    .duration ==
+						    DUR_SIXTEENTH) {
+							number_of_sixteenth_duration +=
+								1;
+						} else if (bar->elements[i]
+								   .data.chord
+								   .duration ==
+							   DUR_EIGHTH) {
+							number_of_sixteenth_duration +=
+								2;
+						} else if (bar->elements[i]
+								   .data.chord
+								   .duration ==
+							   DUR_QUARTER) {
+							number_of_sixteenth_duration +=
+								4;
+						}
+						previous_note_duration =
+							bar->elements[i]
+								.data.chord
+								.duration;
 					}
-					previous_note_duration =
-						bar->elements[i]
-							.data.chord.duration;
 				} else if (bar->elements[i].type ==
 						   ELEMENT_MACRO &&
 					   IS_INNER_MACRO(
@@ -839,6 +907,19 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 					latex_parse_inner_macro(
 						str,
 						&bar->elements[i].data.macro);
+					if (bar->elements[i].data.macro.type ==
+						    MACRO_APPOGGIATURA_BEGIN ||
+					    bar->elements[i].data.macro.type ==
+						    MACRO_APPOGGIATURA_CHORD_BEGIN)
+						is_appoggiatura = 0;
+					if (bar->elements[i].data.macro.type ==
+					    MACRO_APPOGGIATURA_CHORD_MIDDLE)
+						is_appoggiatura = 1;
+					if (bar->elements[i].data.macro.type ==
+						    MACRO_APPOGGIATURA_END ||
+					    bar->elements[i].data.macro.type ==
+						    MACRO_APPOGGIATURA_CHORD_END)
+						is_appoggiatura = -1;
 				} else if (bar->elements[i].type ==
 						   ELEMENT_MACRO &&
 					   IS_CUSTOMIZED_MACRO(

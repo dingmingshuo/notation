@@ -58,6 +58,11 @@ enum macro_type_t {
 	MACRO_3_4 = 202, // 3/4
 	MACRO_2_4 = 203, // 2/4
 	MACRO_ARPEGGIO = 204, // arpeggio
+	MACRO_APPOGGIATURA_BEGIN = 205, // appoggiatura_begin
+	MACRO_APPOGGIATURA_END = 206, // appoggiatura_end
+	MACRO_APPOGGIATURA_CHORD_BEGIN = 207, // appoggiatura_chord_begin
+	MACRO_APPOGGIATURA_CHORD_MIDDLE = 208, // appoggiatura_chord_middle
+	MACRO_APPOGGIATURA_CHORD_END = 209, // appoggiatura_chord_end
 	// Invisible macros (301~399)
 	MACRO_NEW_LINE = 301,
 	// Key macros (401~499)

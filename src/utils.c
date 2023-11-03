@@ -278,6 +278,16 @@ int str_to_macro(struct macro_t *macro, char *str)
 		}
 	} else if (strcmp(str, "Rubato") == 0) {
 		macro->type = MACRO_RUBATO;
+	} else if (strcmp(str, "ap") == 0) {
+		macro->type = MACRO_APPOGGIATURA_BEGIN;
+	} else if (strcmp(str, "/ap") == 0) {
+		macro->type = MACRO_APPOGGIATURA_END;
+	} else if (strcmp(str, "ap(") == 0) {
+		macro->type = MACRO_APPOGGIATURA_CHORD_BEGIN;
+	} else if (strcmp(str, "ap|") == 0) {
+		macro->type = MACRO_APPOGGIATURA_CHORD_MIDDLE;
+	} else if (strcmp(str, "ap)") == 0) {
+		macro->type = MACRO_APPOGGIATURA_CHORD_END;
 	} else if (strcmp(str, "pizz.") == 0) {
 		macro->type = MACRO_PIZZ;
 	} else if (strcmp(str, "arco.") == 0) {

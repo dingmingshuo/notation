@@ -4,8 +4,10 @@ instrument: 中胡
 
 {typekey:G} {displaykey:G} {display_flat}
 [4/4] [Largo] [1=G] [tempo=233]
-0 0 0 [tie:14]3 |[dim:100][/tie][tie:43]3 - - - |[/tie]3 - - - |0 0 0 0 |0 0 0 0 |
+0 0 0 [ap]32[/ap][tie:14]3 |[dim:100][/tie][tie:43]3 - - - |[/tie]3 - - - |0 0 0 0 |0 0 0 0 |
 0 0 0/[tie:30]1/  1 |
 [newline]
 
-[/tie:10][dim.]1 - - - | 1/2//3// 1/2 3//[cresc:80]#4//  6/7/ | [Rubato][pizz.][arco.]1 1 1 1 |
+[dim.][ap]32[/ap]1 - (32) [ap(]v12 [ap|] v2#3[ap)] (23) - |
+ 1/2//3// 1/[ap]#3 [/ap]2 [p]3//[cresc:80]#4//  6/7/ | 
+ [Rubato][pizz.][arco.]1 1 1 [ff]1 |

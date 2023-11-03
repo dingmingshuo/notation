@@ -389,7 +389,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 	int line_break_id[MAX_LINE];
 	line_break_id[0] = 0;
 	int line_count = 0;
-	int length_of_this_line = 0;
+	float length_of_this_line = 0;
 	for (int b = 0; b < bar_count; b++) {
 		struct bar_t *bar = &staff[b];
 		int new_line_macro = 0;
@@ -403,7 +403,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 					length_of_this_line += 2;
 				} else if (bar->elements[i].data.note.duration ==
 					   DUR_QUARTER) {
-					length_of_this_line += 4;
+					length_of_this_line += 3.5;
 				}
 			} else if (bar->elements[i].type == ELEMENT_MACRO &&
 				   IS_INNER_MACRO(

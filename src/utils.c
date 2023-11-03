@@ -51,6 +51,12 @@ int macro_to_str(char *str, struct macro_t *macro)
 	case MACRO_UNIS:
 		strcpy(str, "unis.");
 		break;
+	case MACRO_PIZZ:
+		strcpy(str, "pizz.");
+		break;
+	case MACRO_ARCO:
+		strcpy(str, "arco.");
+		break;
 	case MACRO_LARGO:
 		strcpy(str, "Largo");
 		break;
@@ -86,6 +92,9 @@ int macro_to_str(char *str, struct macro_t *macro)
 		break;
 	case MACRO_LARGAMENTE:
 		strcpy(str, "Largamente");
+		break;
+	case MACRO_RUBATO:
+		strcpy(str, "Rubato");
 		break;
 	case MACRO_SOLO:
 		strcpy(str, "Solo");
@@ -235,6 +244,17 @@ int str_to_macro(struct macro_t *macro, char *str)
 		macro->type = MACRO_DIM_BEGIN;
 	} else if (strcmp(str, "dimend") == 0) {
 		macro->type = MACRO_DIM_END;
+	} else if (strncmp(str, "tempo=", 6) == 0) {
+		macro->type = MACRO_TEMPO;
+		if (sscanf(&str[6], "%lf", &macro->value) == 0) {
+			return 1;
+		}
+	} else if (strcmp(str, "Rubato") == 0) {
+		macro->type = MACRO_RUBATO;
+	} else if (strcmp(str, "pizz.") == 0) {
+		macro->type = MACRO_PIZZ;
+	} else if (strcmp(str, "arco.") == 0) {
+		macro->type = MACRO_ARCO;
 	} else {
 		return 1;
 	}

@@ -285,32 +285,6 @@ int latex_parse_inner_macro(char *str, struct macro_t *macro)
 	return 0;
 }
 
-int latex_parse_customed_macro(char *str, struct macro_t *macro,
-			       enum duration_t previous_note_duration)
-{
-	if (macro->type == MACRO_TIE_BEGIN) {
-		char tie_str[MAX_MACRO_STRING_LEN];
-		sprintf(tie_str, "\\tiebegin{%.1lf}", macro->value);
-		strcat(str, tie_str);
-	}
-	if (macro->type == MACRO_TIE_END) {
-		char tie_str[MAX_MACRO_STRING_LEN];
-		sprintf(tie_str, "\\tieend{%.1lf}", macro->value);
-		strcat(str, tie_str);
-	}
-	if (macro->type == MACRO_CRESC_START) {
-		char tie_str[MAX_MACRO_STRING_LEN];
-		sprintf(tie_str, "\\crescstart{%.1lf}", macro->value);
-		strcat(str, tie_str);
-	}
-	if (macro->type == MACRO_DIM_START) {
-		char tie_str[MAX_MACRO_STRING_LEN];
-		sprintf(tie_str, "\\dimstart{%.1lf}", macro->value);
-		strcat(str, tie_str);
-	}
-	return 0;
-}
-
 int latex_parse_key_macro(char *str, struct macro_t *macro)
 {
 	strcat(str, "$\\normalsize 1 = ");
@@ -400,32 +374,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"    arc (135:225:0.3em) arc (45:-45:0.3em);\n"
 		"\\end{tikzpicture}\n"
 		"}\n"
-		"\\newcommand\\tiebegin[1]{\n"
-		"\\begin{tikzpicture}[remember picture,overlay]\n"
-		"\\filldraw (\\fpeval{(#1+3)}pt, \\fpeval{16+0.1*#1}pt)\n"
-		"arc (90:180:#1pt and \\fpeval{3.7+0.1*#1}pt)\n"
-		"arc (180:90:#1pt and \\fpeval{3.4+0.1*#1}pt);\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
-		"\\newcommand\\tieend[1]{\n"
-		"\\begin{tikzpicture}[remember picture,overlay]\n"
-		"\\filldraw (\\fpeval{-#1+3}pt, \\fpeval{16+0.1*#1}pt)\n"
-		"arc (90:0:#1pt and \\fpeval{3.7+0.1*#1}pt)\n"
-		"arc (0:90:#1pt and \\fpeval{3.4+0.1*#1}pt);\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
-		"\\newcommand\\crescstart[1]{\n"
-		"\\begin{tikzpicture}[remember picture,overlay]\n"
-		"\\draw[line width=0.5] (3pt,-13pt) -- (\\fpeval{3+#1}pt,\\fpeval{-11+#1/(40+#1)}pt) ;\n"
-		"\\draw[line width=0.5] (3pt,-13pt) -- (\\fpeval{3+#1}pt,\\fpeval{-15-#1/(40+#1)}pt) ;\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
-		"\\newcommand\\dimstart[1]{\n"
-		"\\begin{tikzpicture}[remember picture,overlay]\n"
-		"\\draw[line width=0.5] (3pt,\\fpeval{-11+#1/(40+#1)}pt) -- (\\fpeval{3+#1}pt,-13pt) ;\n"
-		"\\draw[line width=0.5] (3pt,\\fpeval{-15-#1/(40+#1)}pt) -- (\\fpeval{3+#1}pt,-13pt) ;\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
 		"\\newcommand\\tempomacro[1]{\\small\n"
 		"\\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]\n"
 		"\\draw [line width=0.75]    (199.62,99) -- (199.62,111.59) ;\n"
@@ -493,7 +441,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 	// Render staff
 	int upper_long_term_macro = 0;
 	int lower_long_term_macro = 0;
-	float previous_tie_macro_value = -1; // [tie:value]--->[/tie:value]
 	for (int lineno = 0; lineno < line_count; lineno++) {
 		// Line start
 		char line_start[] = "\\begin{tabular}{";
@@ -824,33 +771,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 					latex_parse_inner_macro(
 						str,
 						&bar->elements[i].data.macro);
-				} else if (bar->elements[i].type ==
-						   ELEMENT_MACRO &&
-					   IS_CUSTOMIZED_MACRO(
-						   bar->elements[i]
-							   .data.macro.type)) {
-					if (bar->elements[i].data.macro.type ==
-					    MACRO_TIE_BEGIN) {
-						previous_tie_macro_value =
-							bar->elements[i]
-								.data.macro
-								.value;
-					}
-					if (bar->elements[i].data.macro.type ==
-					    MACRO_TIE_END) {
-						if (bar->elements[i]
-							    .data.macro.value <
-						    0.1) {
-							bar->elements[i]
-								.data.macro
-								.value =
-								previous_tie_macro_value;
-						}
-					}
-					latex_parse_customed_macro(
-						str,
-						&bar->elements[i].data.macro,
-						previous_note_duration);
 				}
 
 				if (number_of_sixteenth_duration > 0 &&

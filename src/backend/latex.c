@@ -268,16 +268,6 @@ int latex_parse_macro(char *str, struct macro_t *macro)
 	return 0;
 }
 
-int latex_parse_lower_macro(char *str, struct macro_t *macro)
-{
-	char macro_str[MAX_MACRO_STRING_LEN];
-	macro_to_str(macro_str, macro);
-	strcat(str, "\\lowermacro{");
-	strcat(str, macro_str);
-	strcat(str, " }");
-	return 0;
-}
-
 int latex_parse_inner_macro(char *str, struct macro_t *macro)
 {
 	if (macro->type == MACRO_4_4) {
@@ -387,11 +377,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\newcommand\\stress[1]{\\accentset{>}{#1}}\n"
 		"\\newcommand\\staccato[1]{\\accentset{\\blacktriangledown}{#1}}\n"
 		"\\newcommand\\macro[1]{\\scriptsize{\\textbf{\\textit{#1}}}}\n"
-		"\\newcommand\\lowermacro[1]{\n"
-		"\\begin{tikzpicture}[remember picture,overlay]\n"
-		"\\draw (2pt, -13pt) node [anchor=north] [inner sep=0.75pt]    {\\macro{#1}};\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
 		"\\newcommand\\tremolo[1]{\\accentset{\n"
 		"\\begin{tikzpicture}\n"
 		"    \\draw (0.2em, 0.4em) -- (0.6em, 0.8em);\n"
@@ -866,14 +851,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 						str,
 						&bar->elements[i].data.macro,
 						previous_note_duration);
-				} else if (bar->elements[i].type ==
-						   ELEMENT_MACRO &&
-					   IS_LOWER_MACRO(
-						   bar->elements[i]
-							   .data.macro.type)) {
-					latex_parse_lower_macro(
-						str,
-						&bar->elements[i].data.macro);
 				}
 
 				if (number_of_sixteenth_duration > 0 &&
@@ -891,7 +868,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		for (int b = line_break_id[lineno];
 		     b < line_break_id[lineno + 1]; b++) {
 			struct bar_t *bar = &staff[b];
-			/*
 			for (int i = 0; i < bar->element_count; i++) {
 				if (bar->elements[i].type == ELEMENT_NOTE) {
 					continue;
@@ -905,7 +881,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 						&bar->elements[i].data.macro);
 				}
 			}
-			*/
 			if (b != line_break_id[lineno + 1] - 1) {
 				strcat(str, " & ");
 			}

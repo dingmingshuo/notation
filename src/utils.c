@@ -30,9 +30,6 @@ int macro_to_str(char *str, struct macro_t *macro)
 	case MACRO_CRESC:
 		strcpy(str, "cresc.");
 		break;
-	case MACRO_DIM:
-		strcpy(str, "dim.");
-		break;
 	case MACRO_RIT:
 		strcpy(str, "rit.");
 		break;
@@ -130,8 +127,6 @@ int str_to_macro(struct macro_t *macro, char *str)
 		macro->type = MACRO_SFZ;
 	} else if (strcmp(str, "cresc.") == 0) {
 		macro->type = MACRO_CRESC;
-	} else if (strcmp(str, "dim.") == 0) {
-		macro->type = MACRO_DIM;
 	} else if (strcmp(str, "rit.") == 0) {
 		macro->type = MACRO_RIT;
 	} else if (strcmp(str, "accel.") == 0) {

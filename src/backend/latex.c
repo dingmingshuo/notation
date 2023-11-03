@@ -22,19 +22,16 @@ int latex_parse_note(char *str, struct note_t *note,
 		if (previous_note_duration == DUR_EIGHTH) {
 			strcat(str, " \\underline{\\cdot} ");
 		} else if (previous_note_duration == DUR_QUARTER) {
-			strcat(str, " \\cdot \\hspace{0.2em}");
+			strcat(str, " \\cdot \\hspace{1.5em}");
 		}
 	}
 	if (note->type == NOTE_TIE) {
-		strcat(str, " - \\hspace{0.5em} ");
+		strcat(str, " - \\hspace{1.5em} ");
 	}
 	if (note->type == NOTE_REST || note->type == NOTE_NOTE) {
 		char note_str[MAX_NOTE_STRING_LEN];
 		note_str[0] = '\0';
-		// Proceed padding
-		if (note->duration == DUR_EIGHTH) {
-			strcat(note_str, " \\underline{\\hspace{0.1em}}");
-		}
+
 		// Proceed accidental
 		if (note->duration == DUR_EIGHTH) {
 			strcat(note_str, " \\underline{ ");
@@ -101,9 +98,9 @@ int latex_parse_note(char *str, struct note_t *note,
 
 		// Proceed padding
 		if (note->duration == DUR_QUARTER) {
-			strcat(note_str, " \\hspace{0.5em}");
+			strcat(note_str, " \\hspace{1.5em}");
 		} else if (note->duration == DUR_EIGHTH) {
-			strcat(note_str, " \\underline{\\hspace{0.1em}}");
+			strcat(note_str, " \\underline{\\hspace{0.5em}}");
 		}
 
 		// Add to str
@@ -116,11 +113,6 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 {
 	char chord_str[MAX_NOTE_STRING_LEN * MAX_NOTE_PER_CHORD];
 	chord_str[0] = '\0';
-
-	// Proceed padding
-	if (chord->duration == DUR_EIGHTH) {
-		strcat(chord_str, " \\underline{\\hspace{0.1em}}");
-	}
 	// Proceed accidental from the bottom to the top
 	int has_accidental = 0;
 	for (int i = chord->note_count - 1; i >= 0; i--) {
@@ -242,9 +234,9 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 	}
 	// Proceed padding
 	if (chord->duration == DUR_QUARTER) {
-		strcat(chord_str, " \\hspace{0.5em}");
+		strcat(chord_str, " \\hspace{1.5em}");
 	} else if (chord->duration == DUR_EIGHTH) {
-		strcat(chord_str, " \\underline{\\hspace{0.1em}}");
+		strcat(chord_str, " \\underline{\\hspace{0.5em}}");
 	}
 
 	// Add to str
@@ -281,7 +273,7 @@ int latex_parse_inner_macro(char *str, struct macro_t *macro)
 
 int latex_parse_key_macro(char *str, struct macro_t *macro)
 {
-	strcat(str, "$\\normalsize 1 = ");
+	strcat(str, "$ 1 = ");
 	if (macro->type == MACRO_C_KEY) {
 		strcat(str, "\\text{C}");
 	} else if (macro->type == MACRO_G_KEY) {
@@ -315,7 +307,7 @@ int latex_parse_key_macro(char *str, struct macro_t *macro)
 	} else {
 		return 1;
 	}
-	strcat(str, " \\hspace{0.5em}$ ");
+	strcat(str, " $ ");
 	return 0;
 }
 
@@ -328,20 +320,16 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\usepackage{amssymb}\n"
 		"\\usepackage{accents}\n"
 		"\\usepackage{setspace}\n"
-		"\\usepackage{fancyhdr}\n"
 		"\\usepackage{geometry}\n"
 		"\\usepackage{stackengine}\n"
 		"\\usepackage{tikz}\n"
 		"\\usepackage{array}\n"
-		"\\usepackage{ctex}\n"
-		"\\usepackage{xfp}\n"
 		"\\stackMath\n"
-		"\\geometry{a4paper, scale=0.8, left=0.5cm, right=0.5cm, top=1.5cm, bottom=2cm}\n"
-		"\\setlength{\\headheight}{15pt}\n"
+		"\\geometry{a4paper, scale=0.8}\n"
 		"\\parskip 1ex\n"
 		"\\newcommand\\VRule[1][\\arrayrulewidth]{\\vrule width #1}\n"
 		"\\newcommand\\thickbar{\\VRule[1.5pt]}\n"
-		"\\newcommand\\udot[1]{\\oalign{$\\m@th#1$\\cr\\hidewidth\\scalebox{0.38}{\\textbullet}\\hidewidth}}\n"
+		"\\newcommand\\udot[1]{\\mathrm{\\underaccent{\\dot}{#1}}}\n"
 		"\\newcommand\\stress[1]{\\accentset{>}{#1}}\n"
 		"\\newcommand\\staccato[1]{\\accentset{\\blacktriangledown}{#1}}\n"
 		"\\newcommand\\macro[1]{\\scriptsize{\\textbf{\\textit{#1}}}}\n"
@@ -389,7 +377,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 	int line_break_id[MAX_LINE];
 	line_break_id[0] = 0;
 	int line_count = 0;
-	float length_of_this_line = 0;
+	int length_of_this_line = 0;
 	for (int b = 0; b < bar_count; b++) {
 		struct bar_t *bar = &staff[b];
 		int new_line_macro = 0;
@@ -403,7 +391,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 					length_of_this_line += 2;
 				} else if (bar->elements[i].data.note.duration ==
 					   DUR_QUARTER) {
-					length_of_this_line += 3.5;
+					length_of_this_line += 4;
 				}
 			} else if (bar->elements[i].type == ELEMENT_MACRO &&
 				   IS_INNER_MACRO(
@@ -540,8 +528,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 				struct bar_t *bar = &staff[b];
 				char macro_str[MAX_MACRO_STRING_LEN];
 				macro_str[0] = '\0';
-				int has_volta_begin =
-					0; // To process begin and end in the same bar
+				int has_volta_begin = 0; // To process begin and end in the same bar
 				for (int i = 0; i < bar->element_count; i++) {
 					if (bar->elements[i].type ==
 						    ELEMENT_MACRO &&
@@ -695,17 +682,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 						str,
 						&bar->elements[i].data.note,
 						previous_note_duration);
-					if (bar->elements[i].data.note.type ==
-					    NOTE_DOT) {
-						if (previous_note_duration ==
-						    DUR_QUARTER)
-							number_of_sixteenth_duration +=
-								2;
-						else if (previous_note_duration ==
-							 DUR_EIGHTH)
-							number_of_sixteenth_duration +=
-								1;
-					}
 					if (bar->elements[i].data.note.duration ==
 					    DUR_SIXTEENTH) {
 						number_of_sixteenth_duration +=
@@ -760,9 +736,8 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 						&bar->elements[i].data.macro);
 				}
 
-				if (number_of_sixteenth_duration > 0 &&
-				    number_of_sixteenth_duration % 4 == 0) {
-					strcat(str, " \\hspace{0.2em} ");
+				if (number_of_sixteenth_duration == 4) {
+					strcat(str, " \\hspace{0.5em} ");
 					number_of_sixteenth_duration = 0;
 				}
 			}
@@ -804,7 +779,7 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 }
 
 int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
-		 char *filename, char *output_dir)
+		 char *filename, char* output_dir)
 {
 	char str[MAX_STR_LEN];
 	str[0] = '\0';
@@ -818,7 +793,7 @@ int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
 	// Compile to pdf
 	char command[MAX_STR_LEN];
 	command[0] = '\0';
-	strcat(command, "xelatex -output-directory=");
+	strcat(command, "pdflatex -output-directory=");
 	strcat(command, output_dir);
 	strcat(command, " ");
 	strcat(command, filename);

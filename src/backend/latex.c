@@ -320,16 +320,20 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"\\usepackage{amssymb}\n"
 		"\\usepackage{accents}\n"
 		"\\usepackage{setspace}\n"
+		"\\usepackage{fancyhdr}\n"
 		"\\usepackage{geometry}\n"
 		"\\usepackage{stackengine}\n"
 		"\\usepackage{tikz}\n"
 		"\\usepackage{array}\n"
+		"\\usepackage{ctex}\n"
+		"\\usepackage{xfp}\n"
 		"\\stackMath\n"
-		"\\geometry{a4paper, scale=0.8}\n"
+		"\\geometry{a4paper, scale=0.8, left=0.5cm, right=0.5cm, top=1.5cm, bottom=2cm}\n"
+		"\\setlength{\\headheight}{15pt}\n"
 		"\\parskip 1ex\n"
 		"\\newcommand\\VRule[1][\\arrayrulewidth]{\\vrule width #1}\n"
 		"\\newcommand\\thickbar{\\VRule[1.5pt]}\n"
-		"\\newcommand\\udot[1]{\\mathrm{\\underaccent{\\dot}{#1}}}\n"
+		"\\newcommand\\udot[1]{\\oalign{$\\m@th#1$\\cr\\hidewidth\\scalebox{0.38}{\\textbullet}\\hidewidth}}\n"
 		"\\newcommand\\stress[1]{\\accentset{>}{#1}}\n"
 		"\\newcommand\\staccato[1]{\\accentset{\\blacktriangledown}{#1}}\n"
 		"\\newcommand\\macro[1]{\\scriptsize{\\textbf{\\textit{#1}}}}\n"
@@ -793,7 +797,7 @@ int latex_render(struct meta_t *meta, struct bar_t *bar_t, int bar_count,
 	// Compile to pdf
 	char command[MAX_STR_LEN];
 	command[0] = '\0';
-	strcat(command, "pdflatex -output-directory=");
+	strcat(command, "xelatex -output-directory=");
 	strcat(command, output_dir);
 	strcat(command, " ");
 	strcat(command, filename);

@@ -91,14 +91,7 @@ enum macro_type_t {
 	MACRO_CRESC_BEGIN = 701, // crescendo begin
 	MACRO_CRESC_END = 702, // crescendo end
 	MACRO_DIM_BEGIN = 703, // diminuendo begin
-	MACRO_DIM_END = 704, // diminuendo end
-	// Customized macros (801~899)
-	MACRO_TIE_BEGIN = 801, // tie begin
-	MACRO_TIE_END = 802, // tie end
-	MACRO_CRESC_START = 803, // cresc start
-	MACRO_DIM_START = 804, // dim start
-	MACRO_TRI_BEGIN = 805, // dim start
-	MACRO_TRI_END = 806, // dim start
+	MACRO_DIM_END = 704 // diminuendo end
 };
 
 #define IS_LOWER_MACRO(macro) ((macro) < 100)
@@ -109,7 +102,6 @@ enum macro_type_t {
 #define IS_BARLINE_MACRO(macro) (500 < (macro) && (macro) < 600)
 #define IS_UPPER_LONG_TERM_MACRO(macro) (600 < (macro) && (macro) < 700)
 #define IS_LOWER_LONG_TERM_MACRO(macro) (700 < (macro) && (macro) < 800)
-#define IS_CUSTOMIZED_MACRO(macro) (800 < (macro) && (macro) < 900)
 
 enum setting_type_t {
 	SETTING_TYPE_KEY,

@@ -249,28 +249,6 @@ int str_to_macro(struct macro_t *macro, char *str)
 		macro->type = MACRO_DIM_BEGIN;
 	} else if (strcmp(str, "dimend") == 0) {
 		macro->type = MACRO_DIM_END;
-	} else if (strncmp(str, "tie:", 4) == 0) {
-		macro->type = MACRO_TIE_BEGIN;
-		if (sscanf(&str[4], "%lf", &macro->value) == 0) {
-			return 1;
-		}
-	} else if (strcmp(str, "/tie") == 0) {
-		macro->type = MACRO_TIE_END;
-	} else if (strncmp(str, "/tie:", 5) == 0) {
-		macro->type = MACRO_TIE_END;
-		if (sscanf(&str[5], "%lf", &macro->value) == 0) {
-			return 1;
-		}
-	} else if (strncmp(str, "cresc:", 6) == 0) {
-		macro->type = MACRO_CRESC_START;
-		if (sscanf(&str[6], "%lf", &macro->value) == 0) {
-			return 1;
-		}
-	} else if (strncmp(str, "dim:", 4) == 0) {
-		macro->type = MACRO_DIM_START;
-		if (sscanf(&str[4], "%lf", &macro->value) == 0) {
-			return 1;
-		}
 	} else if (strncmp(str, "tempo=", 6) == 0) {
 		macro->type = MACRO_TEMPO;
 		if (sscanf(&str[6], "%lf", &macro->value) == 0) {

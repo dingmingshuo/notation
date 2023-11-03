@@ -31,7 +31,6 @@ enum macro_type_t {
 	MACRO_SFP = 11, // sforzando piano
 	MACRO_SF = 12, // sforzato
 	MACRO_FP = 13, // forzando piano
-	MACRO_DIM = 14, // diminuendo
 	// Upper macros (101~199)
 	MACRO_DIV = 101, // divisi
 	MACRO_UNIS = 102, // unisono

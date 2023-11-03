@@ -9,24 +9,12 @@ int yylex(void);
 int lineno = 0;
 %}
 
-ASC     [\x00-\x7f]
-ASCN    [\x00-\t\v-\x7f]
-U       [\x80-\xbf]
-U2      [\xc2-\xdf]
-U3      [\xe0-\xef]
-U4      [\xf0-\xf4]
-UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
-UANYN   {ASCN}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U} 
-UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
-UNORMAL [a-zA-Z0-9\ ]|{UANYN}
-
 NewLine             \n
 Whitespace          [ \t\r\v\f]
 
-Head                head\:{UNORMAL}*
-Title				title\:{UNORMAL}*
-Composer			composer\:{UNORMAL}*
-Instrument			instrument\:{UNORMAL}*
+Title				title\:[a-zA-Z0-9\ ]*
+Composer			composer\:[a-zA-Z0-9\ ]*
+Instrument			instrument\:[a-zA-Z0-9\ ]*
 
 Stress              \>
 Staccato            v
@@ -45,8 +33,7 @@ PlaceHolder         \_
 
 ChordBrackets		[\(\)]
 
-UMACRO              [a-zA-Z0-9\/\.\=\#\:\,\'\;\(\|\)]
-Macro           	\[{UMACRO}*\]
+Macro           	\[[a-zA-Z0-9\/\.\=\#]*\]
 
 SetTypeKey			\{typekey:[b\#]?[A-G]\}
 SetDisplayKey		\{displaykey:[b\#]?[A-G]\}

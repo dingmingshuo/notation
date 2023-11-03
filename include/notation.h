@@ -49,6 +49,10 @@ enum macro_type_t {
 	MACRO_LARGAMENTE = 114, // largamente
 	MACRO_SOLO = 115, // solo
 	MACRO_TUTTI = 116, // tutti
+	MACRO_TEMPO = 117, // tempo
+	MACRO_RUBATO = 118, // rubato
+	MACRO_PIZZ = 119, //pizz
+	MACRO_ARCO = 120, //arco
 	// Inner macros (201~299)
 	MACRO_4_4 = 201, // 4/4
 	MACRO_3_4 = 202, // 3/4
@@ -145,6 +149,7 @@ struct chord_t {
 
 struct macro_t {
 	enum macro_type_t type;
+	double value;
 };
 
 struct setting_t {

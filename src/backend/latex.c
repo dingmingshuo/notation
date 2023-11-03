@@ -255,16 +255,10 @@ int latex_parse_chord(char *str, struct chord_t *chord)
 int latex_parse_macro(char *str, struct macro_t *macro)
 {
 	char macro_str[MAX_MACRO_STRING_LEN];
-	if (macro->type == MACRO_TEMPO) {
-		char tempo_str[MAX_MACRO_STRING_LEN];
-		sprintf(tempo_str, "\\tempomacro{%d}", (int)(macro->value));
-		strcat(str, tempo_str);
-	} else {
-		macro_to_str(macro_str, macro);
-		strcat(str, "\\macro{");
-		strcat(str, macro_str);
-		strcat(str, " }");
-	}
+	macro_to_str(macro_str, macro);
+	strcat(str, "\\macro{");
+	strcat(str, macro_str);
+	strcat(str, " }");
 	return 0;
 }
 
@@ -372,13 +366,6 @@ int latex_parse(char *str, struct meta_t *meta, struct bar_t *staff,
 		"    arc (135:225:0.3em) arc (45:-45:0.3em)\n"
 		"    arc (135:225:0.3em) arc (45:-45:0.3em)\n"
 		"    arc (135:225:0.3em) arc (45:-45:0.3em);\n"
-		"\\end{tikzpicture}\n"
-		"}\n"
-		"\\newcommand\\tempomacro[1]{\\small\n"
-		"\\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]\n"
-		"\\draw [line width=0.75]    (199.62,99) -- (199.62,111.59) ;\n"
-		"\\draw  [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ,fill opacity=1 ] (194.68,112.93) .. controls (194.47,112.15) and (195.4,111.22) .. (196.77,110.85) .. controls (198.13,110.48) and (199.41,110.81) .. (199.62,111.59) .. controls (199.83,112.37) and (198.9,113.3) .. (197.53,113.67) .. controls (196.17,114.04) and (194.89,113.71) .. (194.68,112.93) -- cycle ;\n"
-		"\\draw (201.62,102) node [anchor=north west][inner sep=0.75pt]   [align=left] {$=#1$};\n"
 		"\\end{tikzpicture}\n"
 		"}\n";
 
